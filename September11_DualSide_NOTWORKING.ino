@@ -83,8 +83,10 @@ void loop()
     forceCheck(); //check to see if the max tensile / compressive force has been reached and actuate if it has.
    
     } else {
-        digitalWrite(RELAY_PIN2, HIGH); // Close Pulling valve
-        digitalWrite(RELAY_PIN1, HIGH); // Open pushing valve
+        digitalWrite(RELAY_PIN2, HIGH); // Exhaust pulling valve
+        digitalWrite(RELAY_PIN1, HIGH); // Exhaust pushing valve
+        digitalWrite(RELAY_PIN4, HIGH); // Exhaust pulling valve
+        digitalWrite(RELAY_PIN3, HIGH); // Exhaust pushing valve
         Serial.println("Demo complete... Freezing...");
         while(1);
     }
