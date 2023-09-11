@@ -10,6 +10,7 @@ const int RELAY_PIN1 = 6;  // the Arduino pin, which connects to the IN3 pin of 
 const int RELAY_PIN2 = 7;  // the Arduino pin, which connects to the IN2 pin of relay
 
 
+
 int32_t maximumTensileForceN = 20; //input required maximum tensile force
 int32_t maximumCompressiveForceN = -20; //input required maximum compressive force
 
@@ -165,13 +166,13 @@ void forceCheck(){
    int32_t currentForce = myScale.getWeight(true,8); //Take the average of 8 cycles
    
 
-    if (currentForce > maximumTensileForceN) // When pulling force reaches designated Force (N)
+    if (currentForce > maximumTensileForceN) // When pulling force reaches required Force (N)
     {
       digitalWrite(RELAY_PIN2, HIGH); //Shut off pulling force
       digitalWrite(RELAY_PIN1, LOW); //Turn on pushing force
       Serial.println(currentForce);
       //Serial.println(" N --> STARTED PUSHING...");
-    } else if (currentForce < maximumCompressiveForceN) // When pushing force reaches Designated Force (N)
+    } else if (currentForce < maximumCompressiveForceN) // When pushing force reaches required Force (N)
     {
       digitalWrite(RELAY_PIN1, HIGH); //Shut off pushing force
       digitalWrite(RELAY_PIN2, LOW); //Turn on pulling force
@@ -188,13 +189,13 @@ void forceCheck(){
     currentForce = myScale.getWeight(true,8); //Take the average of 8 cycles
    
 
-    if (currentForce > maximumTensileForceN) // When pulling force reaches 30 N
+    if (currentForce > maximumTensileForceN) // When pulling force reaches required force (N)
     {
       digitalWrite(RELAY_PIN2, HIGH); //Shut off pulling force
       digitalWrite(RELAY_PIN1, LOW); //Turn on pushing force
       Serial.println(currentForce);
       //Serial.println(" N --> STARTED PUSHING...");
-    } else if (currentForce < maximumCompressiveForceN) // When pushing force reaches 30 N
+    } else if (currentForce < maximumCompressiveForceN) // When pushing force reaches required Force (N)
     {
       digitalWrite(RELAY_PIN1, HIGH); //Shut off pushing force
       digitalWrite(RELAY_PIN2, LOW); //Turn on pulling force
