@@ -6,13 +6,16 @@
 QWIICMUX myMux;
 byte loadCellOneAddress = 4;
 byte loadCellTwoAddress = 3;
-const int RELAY_PIN1 = 6;  // the Arduino pin, which connects to the IN3 pin of relay
-const int RELAY_PIN2 = 7;  // the Arduino pin, which connects to the IN2 pin of relay
+const int RELAY_PIN1 = 6;  // the Arduino pin, which connects to the IN1 pin of relay (controls solenoid 1)
+const int RELAY_PIN2 = 7;  // the Arduino pin, which connects to the IN2 pin of relay (controls solenoid 2)
+const int RELAY_PIN3 = 8;  // the Arduino pin, which connects to the IN3 pin of relay (controls solenoid 3)
+const int RELAY_PIN4 = 9;  // the Arduino pin, which connects to the IN4 pin of relay (controls solenoid 4)
 
 
 
 int32_t maximumTensileForceN = 20; //input required maximum tensile force
 int32_t maximumCompressiveForceN = -20; //input required maximum compressive force
+float loadCellCalibrationFactor = 79.35;
 
 const unsigned long demoRunTime = 30000;
 long timeOffset = 0;
@@ -30,7 +33,7 @@ void scaleTare(); //Calibrate the scale
 
 void forceCheck(); //check to see if the force has reached its limit and switch direction if it has
 
-int32_t calibratedScaleOffset [1] = {1}; //Holds the calibrated scale offset value for Scale 1
+int32_t calibratedScaleOffset [2] = {1,1}; //Holds the calibrated scale offset value for Scale 1 and Scale 2
 
 //Initial Setup
 void setup()
@@ -47,7 +50,6 @@ void setup()
   muxCheck(); //Checks to see if the mux is communicating
   muxSensorCheck(); //Iterates through each sensor connected to the Mux to ensure they are communicating
   scaleTare(); //Calibrate Scale
-  myScale.setCalibrationFactor(79.35);
 
 
 //Initiate Run
@@ -57,11 +59,15 @@ void setup()
   timeOffset = millis();
 
   // initialize digital pins as an outputs.
-  pinMode(RELAY_PIN1, OUTPUT); // Pushing Valve
+  pinMode(RELAY_PIN1, OUTPUT); // Pushing Valve 
   pinMode(RELAY_PIN2, OUTPUT); // Pulling Valve
+  pinMode(RELAY_PIN3, OUTPUT); // Pushing Valve 
+  pinMode(RELAY_PIN4, OUTPUT); // Pulling Valve
 
   digitalWrite(RELAY_PIN2, HIGH); // Close Pulling valve
   digitalWrite(RELAY_PIN1, LOW); // Open pushing valve
+  digitalWrite(RELAY_PIN4, HIGH); // Close Pulling valve
+  digitalWrite(RELAY_PIN3, LOW); // Open pushing valve
 
   myMux.setPort(loadCellOneAddress); //Connect master to Load Cell #1
 
@@ -162,8 +168,10 @@ void scaleTare(){
 }
 
 void forceCheck(){
-   myMux.setPort(loadCellOneAddress);//Connect master to Load Cell #1
-   int32_t currentForce = myScale.getWeight(true,8); //Take the average of 8 cycles
+    myMux.setPort(loadCellOneAddress);//Connect master to Load Cell #1
+    int32_t currentForce = 0;
+    currentForce = myScale.getAverage(4); //Take the average of 4 readings
+    currentForce = (currentForce-calibratedScaleOffset[0])/loadCellCalibrationFactor; //Utilize the offset and the calibration factor for accurate readings
    
 
     if (currentForce > maximumTensileForceN) // When pulling force reaches required Force (N)
@@ -186,19 +194,20 @@ void forceCheck(){
     }
 
     myMux.setPort(loadCellTwoAddress);//Connect master to Load Cell #2
-    currentForce = myScale.getWeight(true,8); //Take the average of 8 cycles
+    currentForce = myScale.getAverage(4); //Take the average of 4 readings
+    currentForce = (currentForce-calibratedScaleOffset[0])/loadCellCalibrationFactor; //Utilize the offset and the calibration factor for accurate readings
    
 
     if (currentForce > maximumTensileForceN) // When pulling force reaches required force (N)
     {
-      digitalWrite(RELAY_PIN2, HIGH); //Shut off pulling force
-      digitalWrite(RELAY_PIN1, LOW); //Turn on pushing force
+      digitalWrite(RELAY_PIN4, HIGH); //Shut off pulling force
+      digitalWrite(RELAY_PIN3, LOW); //Turn on pushing force
       Serial.println(currentForce);
       //Serial.println(" N --> STARTED PUSHING...");
     } else if (currentForce < maximumCompressiveForceN) // When pushing force reaches required Force (N)
     {
-      digitalWrite(RELAY_PIN1, HIGH); //Shut off pushing force
-      digitalWrite(RELAY_PIN2, LOW); //Turn on pulling force
+      digitalWrite(RELAY_PIN3, HIGH); //Shut off pushing force
+      digitalWrite(RELAY_PIN4, LOW); //Turn on pulling force
       Serial.println(currentForce);
       //Serial.println(" N --> STARTED PULLING...");
     }
